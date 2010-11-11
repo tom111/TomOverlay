@@ -23,10 +23,10 @@ RDEPEND=""
 src_prepare(){
 	epatch "${FILESDIR}/${PN}-2.0.0-yasm.patch"
 	epatch "${FILESDIR}/${PN}-1.3.0-ABI-multilib.patch"
-	# FIXME: In the same way there was QA regarding executable stacks
-	#        with GMP we have some here as well. We cannot apply the
-	#        GMP solution as yasm is used, at least on x86/amd64.
-	#        Furthermore we are able to patch config.ac.
+	# In the same way there was QA regarding executable stacks
+	# with GMP we have some here as well. We cannot apply the
+	# GMP solution as yasm is used, at least on x86/amd64.
+	# Furthermore we are able to patch config.ac.
 
 	ebegin "Patching assembler files to remove executable sections"
 
@@ -34,7 +34,6 @@ src_prepare(){
 	# TODO: apply patch for all files ?
 	# TODO: why does the as-style patch work (does mpir really use yasm ??)
 	for i in $(find . -type f -name '*.asm') ; do
-		echo $i >/dev/null
 		cat >> $i <<-EOF
 			#if defined(__linux__) && defined(__ELF__)
 			.section .note.GNU-stack,"",%progbits
@@ -43,7 +42,6 @@ src_prepare(){
 	done
 
 	for i in $(find . -type f -name '*.as') ; do
-		echo $i >/dev/null
 		cat >> $i <<-EOF
 			%ifidn __OUTPUT_FORMAT__,elf
 			section .note.GNU-stack noalloc noexec nowrite progbits
@@ -70,9 +68,3 @@ src_install() {
 	dodoc ChangeLog README NEWS
 }
 
-pkg_postinst() {
-	elog "The mpir ebuild is still under development."
-	elog "Help us improve the ebuild in:"
-	elog "http://bugs.gentoo.org/show_bug.cgi?id=293383"
-	elog "This ebuild is known to have an executable stack problem on some CPUs"
-}
