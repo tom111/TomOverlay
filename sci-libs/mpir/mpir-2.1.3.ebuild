@@ -9,11 +9,10 @@ inherit eutils autotools
 DESCRIPTION="MPIR is a library for arbitrary precision integer arithmetic derived from version 4.2.1 of gmp"
 HOMEPAGE="http://www.mpir.org/"
 SRC_URI="http://www.mpir.org/${P}.tar.gz"
-RESTRICT="mirror"
 
 LICENSE="LGPL-3"
 SLOT="0"
-KEYWORDS="~amd64 ~ppc ~x86 ~amd64-linux ~x86-linux"
+KEYWORDS="~amd64 ~x86"
 IUSE="+cxx cpudetection"
 
 DEPEND="x86? ( dev-lang/yasm )
@@ -30,9 +29,6 @@ src_prepare(){
 
 	ebegin "Patching assembler files to remove executable sections"
 
-	# TODO: report this to upstream
-	# TODO: apply patch for all files ?
-	# TODO: why does the as-style patch work (does mpir really use yasm ??)
 	for i in $(find . -type f -name '*.asm') ; do
 		cat >> $i <<-EOF
 			#if defined(__linux__) && defined(__ELF__)
