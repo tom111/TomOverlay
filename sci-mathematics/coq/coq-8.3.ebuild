@@ -17,7 +17,7 @@ SLOT="0"
 KEYWORDS="~amd64 ~ppc ~sparc ~x86"
 IUSE="gtk debug +ocamlopt doc"
 
-DEPEND=">=dev-lang/ocaml-3.12[ocamlopt?]
+DEPEND=">=dev-lang/ocaml-3.10[ocamlopt?]
 	>=dev-ml/camlp5-5.09[ocamlopt?]
 	gtk? ( >=dev-ml/lablgtk-2.10.1[ocamlopt?] )
 	doc? ( dev-tex/hevea )"
