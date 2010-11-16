@@ -4,7 +4,7 @@
 
 EAPI=2
 
-inherit flag-o-matic
+inherit eutils flag-o-matic
 
 DESCRIPTION="research tool for polyhedral geometry and combinatorics"
 SRC_URI="http://www.opt.tu-darmstadt.de/polymake/lib/exe/fetch.php/download/${P}.tar.bz2"
@@ -29,6 +29,7 @@ DEPEND="dev-libs/gmp
 RDEPEND="${DEPEND}"
 
 src_prepare() {
+	epatch ${FILESDIR}/${PV}-gentoo-binutils.patch
 	sed -i '/system "strip $to"/d' support/install.pl
 
 	einfo "During compile this package uses up to"
@@ -37,36 +38,11 @@ src_prepare() {
 }
 
 src_configure () {
+	export CXXOPT=$(get-flag -O)
 	# Configure does not accept --host, therefore econf cannot be used
 	./configure --prefix=/usr \
 				--libdir=/usr/$(get_libdir)
 }
-
-# src_compile(){
-# 	# Fixing makefile to not use escaped characters
-# #	sed -i 's/uname -p/uname -i/' support/locate_build_dir
-# 	# Remove stripping from install.pl
-#
-# 	# Configure is asking questions
-# 	# First accept defaults
-# ##	touch defaults || die "Cannot touch file"
-# ##	emake configure < defaults
-# ##	rm defaults
-# ##
-# ##	OFLAG=`get-flag -O`
-# ##
-# ##	# Now inject our answers
-# ##	cd "${S}/build.`uname -i`"
-# ##	sed -i 's,InstallTop=.*$,InstallTop=/usr/share/polymake,' conf.make
-# ##	sed -i 's,InstallArch=.*$,InstallArch=/usr/lib/polymake,' conf.make
-# ##	sed -i 's,InstallBin=.*$,InstallBin=/usr/bin,' conf.make
-# ##	sed -i 's,InstallDoc=.*$,InstallDoc=/usr/share/doc/${PF},' conf.make
-# ##	sed -i "s,CXXOPT=.*$,CXXOPT=${OFLAG}," conf.make
-# ##	cd "${S}"
-# ##	# The makefile respects CXXFLAGS and friends from the environment
-#
-# 	emake || die "emake failed"
-# }
 
 src_install(){
 	emake -j1 DESTDIR="${D}" install || die "install failed"
