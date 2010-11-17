@@ -1,22 +1,221 @@
-diff -U 3 -dHrN polymake-2.9.9.orig/perllib/Polymake/Core/CPlusPlus_config.pm polymake-2.9.9/perllib/Polymake/Core/CPlusPlus_config.pm
---- polymake-2.9.9.orig/perllib/Polymake/Core/CPlusPlus_config.pm	2010-11-17 00:09:21.000000000 +0100
-+++ polymake-2.9.9/perllib/Polymake/Core/CPlusPlus_config.pm	2010-11-17 00:10:49.000000000 +0100
-@@ -83,7 +83,7 @@
+Index: perllib/Polymake/Core/CPlusPlus_config.pm
+===================================================================
+--- perllib/Polymake/Core/CPlusPlus_config.pm	(revision 9915)
++++ perllib/Polymake/Core/CPlusPlus_config.pm	(working copy)
+@@ -24,7 +24,7 @@
+ 
+ sub study_name_mangling {
+    local $_;
+-   @to_mangled_defconstr=();
++   @to_mangled_defconstr=();  @to_mangled_typeinfo=();
+ 
+    my $file=new Tempfile;
+    open my $cc, ">$file.cc";
+@@ -81,11 +81,11 @@
+    }
+    dbg_print( "test program emitted typenames: @typenames\n" ) if $DebugLevel;
     open my $nm, "$nm_util $file.exe |" or die "can't run nm utility: $!\n";
-    my %mangled;
+-   my %mangled;
++   my (%mangled_defc, %mangled_ti);
     while (<$nm>) {
 -      if (my ($mangled)=/\s[TW]\s+(\S*PolymakeTest\S*)/) {
-+      if (my ($mangled)=/\s[TWV]\s+(\S*PolymakeTest\S*)/) {
++      if (my ($symbol, $mangled)=/\s([TWV])\s+(\S*PolymakeTest\S*)/) {
           my $case= $mangled =~ /TestWrap/ ? 3 : $mangled =~ /TestNam/ ? 2 : $mangled =~ /TestGlob/ ? 1 : 0;
-          next if exists $mangled{$case};
+-         next if exists $mangled{$case};
++         next if $symbol eq "V" ? exists $mangled_ti{$case} : exists $mangled_defc{$case};
  	 dbg_print( "nm extracted global name $mangled" ) if $DebugLevel;
-@@ -109,7 +109,8 @@
+ 
+ 	 open my $cf, "$cppfilt_util $mangled |" or die "can't run c++filt utility: $!\n";
+@@ -109,57 +109,75 @@
  to proper utility paths and optional flags if necessary
  .
  	 }
 -         if ($demangled =~ ($case<=2 ? $constructor_re : $wrapped_constructor_re)) {
-+	 declare $wr_con_re=qr{.*}xo;
-+         if ($demangled =~ ($case<=2 ? $constructor_re : $wr_con_re)) {
-             $mangled{$case}=$mangled;
+-            $mangled{$case}=$mangled;
++         if ($symbol eq "V") {
++            if ($demangled =~ ($case<=2 ? $typeinfo_re : $wrapped_typeinfo_re)) {
++               $mangled_ti{$case}=$mangled;
++            } elsif ($demangled !~ /typeinfo name /) {
++               dbg_print( "c++filt returned '$demangled',\n",
++                          "which does not match the expected typeinfo description!" ) if $DebugLevel;
++            }
           } else {
- 	    dbg_print( "c++filt returned '$demangled',\n",
+-	    dbg_print( "c++filt returned '$demangled',\n",
+-		       "which does not match the expected default constructor declaration!" ) if $DebugLevel;
++            if ($demangled =~ ($case<=2 ? $constructor_re : $wrapped_constructor_re)) {
++               $mangled_defc{$case}=$mangled;
++            } else {
++               dbg_print( "c++filt returned '$demangled',\n",
++                          "which does not match the expected default constructor declaration!" ) if $DebugLevel;
++            }
+ 	 }
+       }
+    }
+    close $nm;
+ 
+-   if (keys(%mangled) != 3) {
+-      die <<"."
+-nm has not extracted the constructor names from the test program binary.
+-Possible reason is the incompatibility between nm and $CXX.
+-Please investigate the problem and set the custom variables
+-\$Polymake::Core::CPlusPlus::nm_util  and  \$Polymake::Core::CPlusPlus::cppfilt_util
+-to proper utility paths and optional flags if necessary.
+-.
+-   }
++   if (keys(%mangled_ti) == 3) {
++      @to_mangled_typeinfo=uniq( map {
++                                    my $subst=$typenames[$_==2];
++                                    $mangled_ti{$_} =~ s/$subst/\${&}/;
++                                    "s{.*}{$mangled_ti{$_}}";
++                                 } 1..3 );
+ 
+-   $mangled{1} =~ s/$typenames[0]/\${&}/;
+-   push @to_mangled_defconstr, "s{.*}{$mangled{1}}";
++   } elsif (keys(%mangled_defc) == 3) {
+ 
+-   $_=$mangled{2};
+-   my $l=length($typenames[1]);
+-HARD_TRY:
+-   for (my $start=0; $start<$l; ++$start) {
+-      for (my $end=$l; $end>$start; --$end) {
+-         my $part=substr($typenames[1],$start,$end-$start);
+-         if (/\Q$part\E/) {
+-            if ($start>0 || $end<$l) {
+-               my ($add_pre, $add_post)=($`, $');
+-               my ($rem_pre, $rem_post)=map { /[.{}()\[\]\\?*^\$]/ ? "\\Q$_\\E" : $_ }
+-                  (substr($typenames[1],0,$start), substr($typenames[1],$end));
+-               push @to_mangled_defconstr, "s{^$rem_pre(.*)$rem_post\$}{$add_pre\${1}$add_post}";
++      $mangled_defc{1} =~ s/$typenames[0]/\${&}/;
++      push @to_mangled_defconstr, "s{.*}{$mangled_defc{1}}";
++
++      $_=$mangled_defc{2};
++      my $l=length($typenames[1]);
++    HARD_TRY:
++      for (my $start=0; $start<$l; ++$start) {
++         for (my $end=$l; $end>$start; --$end) {
++            my $part=substr($typenames[1],$start,$end-$start);
++            if (/\Q$part\E/) {
++               if ($start>0 || $end<$l) {
++                  my ($add_pre, $add_post)=($`, $');
++                  my ($rem_pre, $rem_post)=map { /[.{}()\[\]\\?*^\$]/ ? "\\Q$_\\E" : $_ }
++                    (substr($typenames[1],0,$start), substr($typenames[1],$end));
++                  push @to_mangled_defconstr, "s{^$rem_pre(.*)$rem_post\$}{$add_pre\${1}$add_post}";
++               }
++               undef $_;  last HARD_TRY;
+             }
+-            undef $_;  last HARD_TRY;
+          }
+       }
+-   }
+-   if (defined $_) {
+-      warn_print( <<'.' );
++      if (defined $_) {
++         warn_print( <<'.' );
+ Could not guess the name mangling rule for classes defined in namespaces.
+ Please invent the suitable regular expression converting the typeinfo name
+ to the default constructor mangled name and put it in the custom array
+   @Polymake::Core::CPlusPlus::to_mangled_defconstr
+ .
++      }
++
++      $mangled_defc{3} =~ s/$typenames[0]/\${&}/;
++      push @to_mangled_defconstr, "s{.*}{$mangled_defc{3}}";
++
++   } else {
++      die <<"."
++nm has not extracted the symbol names from the test program binary.
++Possible reason is the incompatibility between nm and $CXX.
++Please investigate the problem and set the custom variables
++\$Polymake::Core::CPlusPlus::nm_util  and  \$Polymake::Core::CPlusPlus::cppfilt_util
++to proper utility paths and optional flags if necessary.
++.
+    }
+-
+-   $mangled{3} =~ s/$typenames[0]/\${&}/;
+-   push @to_mangled_defconstr, "s{.*}{$mangled{3}}";
+ }
+ 
+ sub allow_parallel_make {
+Index: perllib/Polymake/Core/CPlusPlus.pm
+===================================================================
+--- perllib/Polymake/Core/CPlusPlus.pm	(revision 9915)
++++ perllib/Polymake/Core/CPlusPlus.pm	(working copy)
+@@ -928,7 +928,8 @@
+ Can't obtain the C++ representation for typeid $typeid.
+ Probably the mangling rules are not guessed correctly.
+ Please investigate and put suitable regular expressions
+-in the custom array \@Polymake::Core::CPlusPlus::to_mangled_defconstr.
++in the custom arrays \@Polymake::Core::CPlusPlus::to_mangled_typeinfo
++or \@Polymake::Core::CPlusPlus::to_mangled_defconstr.
+ .
+    };
+    if (wantarray) {
+@@ -2253,15 +2254,20 @@
+ package Polymake::Core::CPlusPlus;
+ 
+ declare ($from_embedded_rules, $root);
+-declare (@to_mangled_defconstr, $nm_util, $cppfilt_util, $MAKE, $MAKEFLAGS, %private_wrappers, %wrapper_updated);
++declare (@to_mangled_typeinfo, @to_mangled_defconstr, $nm_util, $cppfilt_util, $MAKE, $MAKEFLAGS, %private_wrappers, %wrapper_updated);
+ 
++declare $typeinfo_re=qr{^typeinfo for };
++declare $wrapped_typeinfo_re=qr{^typeinfo for PolymakeTestWrap<(.*)>};
+ declare $constructor_re=qr{::$id_re (?:\[.*?\])? \(\)$}xo;
+ declare $wrapped_constructor_re=qr{^PolymakeTestWrap<(.*)>::PolymakeTestWrap (?:\[.*?\])? \(\)$}xo;
+ 
+ $custom_handler=$Custom->app_handler(undef,__PACKAGE__);
+ 
++$custom_handler->add('@to_mangled_typeinfo', <<'.', $Customize::state_config);
++# Regular expressions deriving the typeinfo mangled name from the class typeinfo name
++.
+ $custom_handler->add('@to_mangled_defconstr', <<'.', $Customize::state_config);
+-# Regular expressions deriving the default constructor mangled name from the class typeinfo
++# Regular expressions deriving the default constructor mangled name from the class typeinfo name
+ .
+ $custom_handler->add('$nm_util', <<'.', $Customize::state_config);
+ # Path and optional flags to the nm utility
+@@ -2281,10 +2287,11 @@
+ $custom_handler->add('%wrapper_updated', <<'.', $Customize::state_hidden);
+ # Timestamps of last changes made to the automatically generated source code of C++/perl wrappers
+ .
+-if (!@to_mangled_defconstr) {
++unless (@to_mangled_typeinfo || @to_mangled_defconstr) {
+    require Polymake::Core::CPlusPlus_config;
+    study_name_mangling();
+    allow_parallel_make();
++   $custom_handler->handler->need_save=1;
+ }
+ 
+ $custom_handler->cleanup;
+@@ -3460,17 +3467,30 @@
+       ($cppf_out, $cppf_in)=new Background::Pipe($cppfilt_util);
+    }
+ 
++   foreach my $rule (@to_mangled_typeinfo) {
++      local $_=$_[0];
++      eval $rule or $@ ? die "syntax error in mangling regex: $@\n" : next;
++      print $cppf_out $_, "\n";
++      $_=readline($cppf_in);
++      if ($_ =~ $wrapped_typeinfo_re) {
++         return $1;
++      } elsif ($_ =~ $typeinfo_re) {
++         return $';
++      }
++   }
++
+    my $case=0;
+    foreach my $rule (@to_mangled_defconstr) {
+       local $_=$_[0];
+       eval $rule or $@ ? die "syntax error in mangling regex: $@\n" : next;
+       print $cppf_out $_, "\n";
++      $_=readline($cppf_in);
+       if (++$case<=2) {
+-	 if (readline($cppf_in) =~ $constructor_re) {
++	 if ($_ =~ $constructor_re) {
+ 	    return $`;
+ 	 }
+       } else {
+-	 if (readline($cppf_in) =~ $wrapped_constructor_re) {
++	 if ($_ =~ $wrapped_constructor_re) {
+ 	    return $1;
+ 	 }
+       }
