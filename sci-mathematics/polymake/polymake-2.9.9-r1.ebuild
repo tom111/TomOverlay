@@ -11,26 +11,32 @@ SRC_URI="http://www.opt.tu-darmstadt.de/polymake/lib/exe/fetch.php/download/${P}
 
 HOMEPAGE="http://www.opt.tu-darmstadt.de/polymake"
 
-IUSE=""
+IUSE="java"
 
 SLOT="0"
 LICENSE="GPL-2"
 KEYWORDS="~amd64 ~x86"
 
-# TODO: Drop java.
-DEPEND="dev-libs/gmp
+COMMONDEP="dev-libs/gmp
 	dev-libs/libxml2
 	dev-perl/XML-LibXML
 	dev-libs/libxslt
 	dev-perl/XML-LibXSLT
 	dev-perl/XML-Writer
-	dev-perl/Term-ReadLine-Gnu
-	>=virtual/jdk-1.5.0"
-RDEPEND="${DEPEND}"
+	dev-perl/Term-ReadLine-Gnu "
+DEPEND="${COMMONDEP}
+	java? ( >=virtual/jdk-1.5
+			dev-java/ant )"
+RDEPEND="${COMMONDEP}
+	java? ( >=virtual/jre-1.5 )"
 
 src_prepare() {
+	# Upstream provided patch. Remove in version 3.0!
 	epatch ${FILESDIR}/${PV}-gentoo-binutils.patch
-	sed -i '/system "strip $to"/d' support/install.pl
+
+	sed -i '/system "strip $to"/d' support/install.pl || die
+	# Makefile has a syntax error for --without-java branch
+	sed -i 's/all-java%/all-java all-java-native all-java-jars/' Makefile || die
 
 	einfo "During compile this package uses up to"
 	einfo "750MB of RAM per process. Use MAKEOPTS=\"-j1\" if"
@@ -38,10 +44,17 @@ src_prepare() {
 }
 
 src_configure () {
+	# Perl based build system, respects $JAVA_HOME and friends
+	if ! use java; then
+		local myconf="--without-java"
+	fi
+
 	export CXXOPT=$(get-flag -O)
 	# Configure does not accept --host, therefore econf cannot be used
 	./configure --prefix=/usr \
-				--libdir=/usr/$(get_libdir)
+		--libdir=/usr/$(get_libdir) \
+		--without-prereq \
+		${myconf} || die
 }
 
 src_install(){
@@ -54,8 +67,4 @@ pkg_postinst(){
 	elog " "
 	elog "This version of polymake does not ship docs. Sorry."
 	elog "Help can be found on http://www.opt.tu-darmstadt.de/polymake_doku/ "
-	elog " "
-	elog "On first start, polymake will ask you about the locations"
-	elog "of external programs it can use."
-	elog "If the initial run crashes, please report to the developers."
 }
