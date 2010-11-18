@@ -24,6 +24,13 @@ DEPEND=">=dev-lang/ocaml-3.10[ocamlopt?]
 
 S="${WORKDIR}/${P/_/}"
 
+src_prepare() {
+	# configure has an error at line 640 leading to closing a string
+	# to early in the generated coq_config.ml. Here is a wild sed :)
+	# It replaces \"$LABLGTKLIB\" by $LABLGTKLIB
+	sed -i "s/\\\\\"\\\$LABLGTKLIB\\\\\"/\\\$LABLGTKLIB/" configure
+}
+
 src_configure() {
 	ocaml_lib=`ocamlc -where`
 	local myconf="--prefix /usr \
@@ -36,8 +43,6 @@ src_configure() {
 		--lablgtkdir ${ocaml_lib}/lablgtk2"
 
 	use debug && myconf="--debug $myconf"
-#	use norealanalysis && myconf="$myconf --reals no"
-#	use norealanalysis || myconf="$myconf --reals all"
 
 	if use gtk; then
 		use ocamlopt && myconf="$myconf --coqide opt"
@@ -46,6 +51,8 @@ src_configure() {
 		myconf="$myconf --coqide no"
 	fi
 	use ocamlopt || myconf="$myconf -byte-only"
+
+	echo ${myconf}
 
 	./configure $myconf || die "configure failed"
 }
