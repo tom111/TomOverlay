@@ -1,6 +1,10 @@
 # ChangeLog for net-mail/mu
-# Copyright 1999-2010 Gentoo Foundation; Distributed under the GPL v2
+# Copyright 1999-2011 Gentoo Foundation; Distributed under the GPL v2
 # $Header: $
+
+  29 Jan 2011; Thomas Kahle <tomka@gentoo.org> mu-0.9.1.ebuild,
+  +files/remove-failing-sandbox-test.patch:
+  Bump to 0.9.1
 
   25 Mar 2010; Cédric Cabessa (ced_c) <ced@ryick.net> mu-0.7.ebuild:
   add postinst elog about migration from 0.6

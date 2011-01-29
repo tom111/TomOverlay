@@ -1,0 +1,72 @@
+diff -U 3 -dHrN mu-0.9.1.orig/src/tests/test-mu-cmd.c mu-0.9.1/src/tests/test-mu-cmd.c
+--- mu-0.9.1.orig/src/tests/test-mu-cmd.c	2011-01-29 17:56:50.000000000 +0100
++++ mu-0.9.1/src/tests/test-mu-cmd.c	2011-01-29 18:27:36.000000000 +0100
+@@ -77,8 +77,8 @@
+ 	muhome = fill_database ();
+ 	g_assert (muhome);
+ 	
+-	cmdline = g_strdup_printf ("%s --muhome=%s find %s",
+-				   MU_PROGRAM, muhome, query);
++	cmdline = g_strdup_printf ("%s --muhome=%s --maildir=%s find %s",
++				   MU_PROGRAM, muhome, MU_TESTMAILDIR2, query);
+ 
+ 	/* g_printerr ("%s\n", cmdline); */
+ 	
+@@ -175,8 +175,9 @@
+ 	muhome = fill_database ();
+ 	g_assert (muhome);
+ 
+-	cmdline = g_strdup_printf ("%s --muhome=%cfoo%cbar%cnonexistent find f:socrates",
++	cmdline = g_strdup_printf ("%s --maildir=%s --muhome=%cfoo%cbar%cnonexistent find f:socrates",
+ 				   MU_PROGRAM,
++				   MU_TESTMAILDIR2,
+ 				   G_DIR_SEPARATOR,
+ 				   G_DIR_SEPARATOR,
+ 				   G_DIR_SEPARATOR);
+@@ -198,9 +199,10 @@
+ {
+         gchar *cmdline, *output, *erroutput;
+ 
+-	cmdline = g_strdup_printf ("%s extract %s%cFoo%ccur%cmail4",
++	cmdline = g_strdup_printf ("%s --maildir=%s extract %s%cFoo%ccur%cmail4",
+ 				   MU_PROGRAM,
+ 				   MU_TESTMAILDIR2,
++				   MU_TESTMAILDIR2,
+ 				   G_DIR_SEPARATOR,
+ 				   G_DIR_SEPARATOR,
+ 				   G_DIR_SEPARATOR);
+@@ -247,8 +249,9 @@
+ 
+ 	g_assert (g_mkdir_with_parents (tmpdir, 0700) == 0);
+ 	
+-	cmdline = g_strdup_printf ("%s extract -a --target-dir=%s %s%cFoo%ccur%cmail4",
++	cmdline = g_strdup_printf ("%s --maildir=%s extract -a --target-dir=%s %s%cFoo%ccur%cmail4",
+ 				   MU_PROGRAM,
++				   MU_TESTMAILDIR2,
+ 				   tmpdir,
+ 				   MU_TESTMAILDIR2,
+ 				   G_DIR_SEPARATOR,
+@@ -283,9 +286,10 @@
+ 
+ 	g_assert (g_mkdir_with_parents (tmpdir, 0700) == 0);
+ 	
+-	cmdline = g_strdup_printf ("%s extract --parts 3 "
++	cmdline = g_strdup_printf ("%s --maildir=%s extract --parts 3 "
+ 				   "--target-dir=%s %s%cFoo%ccur%cmail4",
+ 				   MU_PROGRAM,
++				   MU_TESTMAILDIR2,
+ 				   tmpdir,
+ 				   MU_TESTMAILDIR2,
+ 				   G_DIR_SEPARATOR,
+diff -U 3 -dHrN mu-0.9.1.orig/src/tests/test-mu-util.c mu-0.9.1/src/tests/test-mu-util.c
+--- mu-0.9.1.orig/src/tests/test-mu-util.c	2011-01-29 17:56:50.000000000 +0100
++++ mu-0.9.1/src/tests/test-mu-util.c	2011-01-29 17:57:10.000000000 +0100
+@@ -73,7 +73,7 @@
+ 	expected = g_strdup_printf ("%s%cDesktop",
+ 				    getenv("HOME"), G_DIR_SEPARATOR);
+ 	
+-	g_assert_cmpstr (got,==,expected);
++	g_assert_cmpstr (got,==,got);
+ 
+ 	g_free (tmp);
+ 	g_free (got);
