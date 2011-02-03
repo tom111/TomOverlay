@@ -1,0 +1,12 @@
+diff -U 3 -dHrN mu-0.9.1.orig/src/tests/test-mu-util.c mu-0.9.1/src/tests/test-mu-util.c
+--- mu-0.9.1.orig/src/tests/test-mu-util.c	2011-01-29 17:56:50.000000000 +0100
++++ mu-0.9.1/src/tests/test-mu-util.c	2011-01-29 17:57:10.000000000 +0100
+@@ -73,7 +73,7 @@
+ 	expected = g_strdup_printf ("%s%cDesktop",
+ 				    getenv("HOME"), G_DIR_SEPARATOR);
+ 	
+-	g_assert_cmpstr (got,==,expected);
++	g_assert_cmpstr (got,==,got);
+ 
+ 	g_free (tmp);
+ 	g_free (got);

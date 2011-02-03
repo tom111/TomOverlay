@@ -20,10 +20,6 @@ DEPEND=">=dev-libs/gmime-2.4
 	>=dev-libs/glib-2.22"
 RDEPEND="${DEPEND}"
 
-src_prepare() {
-	epatch "${FILESDIR}/remove-failing-irrelevant-test.patch"
-}
-
 src_test () {
 	emake check || die
 }

@@ -4,7 +4,7 @@
 
 EAPI=3
 
-inherit base eutils
+inherit autotools base eutils
 
 DESCRIPTION="Set of tools to deal with Maildirs, in particular, searching and indexing"
 HOMEPAGE="http://www.djcbsoftware.nl/code/mu/"
@@ -20,8 +20,10 @@ DEPEND=">=dev-libs/gmime-2.4
 	>=dev-libs/glib-2.22"
 RDEPEND="${DEPEND}"
 
+S="${WORKDIR}/mu-ng/"
+
 src_prepare() {
-	epatch "${FILESDIR}/remove-failing-irrelevant-test.patch"
+	eautoreconf
 }
 
 src_test () {
