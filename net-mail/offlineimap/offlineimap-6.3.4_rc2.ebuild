@@ -7,12 +7,13 @@ PYTHON_DEPEND="2"
 PYTHON_USE_WITH="threads ssl?"
 SUPPORT_PYTHON_ABIS="1"
 RESTRICT_PYTHON_ABIS="3.*"
+MY_PV="6.3.4-rc2"
 
 inherit eutils distutils
 
 DESCRIPTION="Powerful IMAP/Maildir synchronization and reader support"
 HOMEPAGE="http://offlineimap.org"
-SRC_URI="https://github.com/nicolas33/offlineimap/tarball/v${PV} -> ${P}.tar.gz"
+SRC_URI="https://github.com/nicolas33/offlineimap/tarball/v${MY_PV} -> ${P}.tar.gz"
 
 LICENSE="GPL-2"
 SLOT="0"
