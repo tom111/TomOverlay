@@ -29,7 +29,7 @@ RDEPEND="${DEPEND}"
 
 src_prepare() {
 	# embedded jreality is a precompiled desaster (bug #346073)
-	epatch ${FILESDIR}/${PV}-drop-jreality.patch
+	epatch ${FILESDIR}/${PN}-2.9.9-drop-jreality.patch
 	rm -rf java_build/jreality
 
 	# Don't strip
