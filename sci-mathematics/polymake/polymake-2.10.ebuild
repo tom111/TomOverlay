@@ -6,10 +6,11 @@ EAPI=2
 
 inherit eutils flag-o-matic
 
-DESCRIPTION="research tool for polyhedral geometry and combinatorics"
-SRC_URI="http://www.opt.tu-darmstadt.de/polymake/lib/exe/fetch.php/download/${P}.tar.bz2"
+MY_PV=${PV}-2
 
-HOMEPAGE="http://www.opt.tu-darmstadt.de/polymake"
+DESCRIPTION="research tool for polyhedral geometry and combinatorics"
+SRC_URI="http://polymake.org/lib/exe/fetch.php/download/${PN}-${MY_PV}.tar.bz2"
+HOMEPAGE="http://polymake.org"
 
 IUSE=""
 
@@ -27,8 +28,7 @@ DEPEND="dev-libs/gmp
 RDEPEND="${DEPEND}"
 
 src_prepare() {
-	# Upstream provided patch. Remove in version 3.0!
-	epatch ${FILESDIR}/${PV}-gentoo-binutils.patch
+	# embedded jreality is a precompiled desaster (bug #346073)
 	epatch ${FILESDIR}/${PV}-drop-jreality.patch
 	rm -rf java_build/jreality
 
