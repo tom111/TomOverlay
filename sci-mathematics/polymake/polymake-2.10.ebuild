@@ -12,13 +12,14 @@ DESCRIPTION="research tool for polyhedral geometry and combinatorics"
 SRC_URI="http://polymake.org/lib/exe/fetch.php/download/${PN}-${MY_PV}.tar.bz2"
 HOMEPAGE="http://polymake.org"
 
-IUSE=""
+IUSE="libpolymake"
 
 SLOT="0"
 LICENSE="GPL-2"
 KEYWORDS="~amd64 ~x86"
 
 DEPEND="dev-libs/gmp
+	dev-libs/boost
 	dev-libs/libxml2
 	dev-perl/XML-LibXML
 	dev-libs/libxslt
@@ -30,6 +31,8 @@ RDEPEND="${DEPEND}"
 src_prepare() {
 	# embedded jreality is a precompiled desaster (bug #346073)
 	epatch "${FILESDIR}/${PV}"-drop-jreality.patch
+	# Assign a soname (reported upstream, no answer)
+	epatch "${FILESDIR}/${PV}"-soname.patch
 	rm -rf java_build/jreality
 
 	# Don't strip
@@ -41,15 +44,24 @@ src_prepare() {
 }
 
 src_configure () {
-
 	export CXXOPT=$(get-flag -O)
+	local myconf
+	if use libpolymake ; then
+		# WTF: If we leave myconf as the empty string here
+		# then configure will fail.
+		myconf="--without-prereq"
+	else
+		# --with-callable is not supported :(
+		myconf="--without-callable"
+	fi
+	echo ${myconf}
 	# Configure does not accept --host, therefore econf cannot be used
 	# Note 'libdir' does not mean where to put .so files!
 	# --libdir=/usr/$(get_libdir) \
 	./configure --prefix=/usr \
 		--without-java \
 		--without-prereq \
-		${myconf} || die
+		"${myconf}" || die
 }
 
 src_install(){
