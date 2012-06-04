@@ -27,6 +27,7 @@ src_compile() {
 
 src_install() {
 	dolib.so cpp/*.so*
+	dosym libgraphbinomial.so.* /usr/$(get_libdir)/libgraphbinomial.so
 	dodir /usr/include/graphbinomials
 	insinto /usr/include/graphbinomials
 	doins cpp/*.h
