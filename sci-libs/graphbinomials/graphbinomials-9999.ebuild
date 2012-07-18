@@ -2,7 +2,7 @@
 
 EAPI=4
 
-inherit git
+inherit git-2
 
 DESCRIPTION="Tools for graphs on monomials"
 HOMEPAGE="https://github.com/tom111/GraphBinomials"
