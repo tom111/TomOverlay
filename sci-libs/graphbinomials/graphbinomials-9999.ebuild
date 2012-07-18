@@ -1,8 +1,10 @@
+# Copyright 1999-2012 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
+# $Header: $
 
 EAPI=4
 
-inherit git-2
+inherit git-2 multilib
 
 DESCRIPTION="Tools for graphs on monomials"
 HOMEPAGE="https://github.com/tom111/GraphBinomials"
