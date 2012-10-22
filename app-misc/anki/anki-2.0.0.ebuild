@@ -20,7 +20,6 @@ IUSE="latex +recording +sound"
 RDEPEND="dev-python/PyQt4[X,svg,webkit]
 	 dev-python/pysqlite:2
 	 >=dev-python/httplib2-0.7.4
-	 <dev-lang/python-3
 	 dev-python/beautifulsoup:python-2
 	 recording? ( media-sound/lame
 				  >=dev-python/pyaudio-0.2.4 )
@@ -30,6 +29,11 @@ RDEPEND="dev-python/PyQt4[X,svg,webkit]
 DEPEND=""
 
 S=${WORKDIR}/anki-2.0
+
+pkg_setup(){
+	python_set_active_version 2
+	python_pkg_setup
+}
 
 src_prepare() {
 	rm -r libanki/thirdparty || die
