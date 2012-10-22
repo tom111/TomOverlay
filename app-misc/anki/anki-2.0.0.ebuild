@@ -4,7 +4,9 @@
 
 EAPI=4
 
-inherit eutils
+PYTHON_DEPEND="2:2.6"
+
+inherit eutils python
 
 DESCRIPTION="A spaced-repetition memory training program (flash cards)"
 HOMEPAGE="http://ichi2.net/anki/"
@@ -30,8 +32,8 @@ DEPEND=""
 S=${WORKDIR}/anki-2.0
 
 src_prepare() {
-	sed -i -e '0,/python/s//python2/' anki || die
 	rm -r libanki/thirdparty || die
+	python_convert_shebangs -r 2 .
 }
 
 # Nothing to configure or compile
@@ -46,20 +48,15 @@ src_compile() {
 src_install() {
 	exeinto /usr/bin/
 	doexe anki
-	rm anki || die
 
 	doicon ${PN}.png
-#	doins anki.xpm anki.png || die
-	rm anki.xpm anki.png || die
 	domenu anki.desktop
-	rm anki.desktop || die
 
 	doman anki.1
-	rm anki.1 || die
 
-	dodir /usr/share/anki
-	insinto /usr/share/anki
-	doins -r * || die
+	dodoc README README.development README.translating
+	insinto "$(python_get_sitedir)"
+	doins -r aqt libanki/anki
 
 	make_desktop_entry ${PN} ${PN} ${PN} "Education"
 }
