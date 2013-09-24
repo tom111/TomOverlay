@@ -39,6 +39,14 @@ checkconfig() {
 			eerror "Please check your installation or the INSTANCE_DIRS variable."
 			return 1
 		fi
+
+		# NOTE: This can't be done by webapp-config if we want runtime configurable TTRSSD_GROUP
+		for dir in ${INSTANCE_FOLDERS}; do
+			if [ -d "${instance}/${dir}" ]; then
+				chown -R ":${TTRSSD_GROUP}" "${instance}/${dir}" || return 1
+				chmod -R g+w "${instance}/${dir}" || return 1
+			fi
+		done
 	done
 }
 

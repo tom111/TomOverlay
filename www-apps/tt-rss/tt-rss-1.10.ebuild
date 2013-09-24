@@ -1,6 +1,6 @@
 # Copyright 1999-2013 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/www-apps/tt-rss/tt-rss-1.9.ebuild,v 1.2 2013/09/12 08:33:47 tomka Exp $
+# $Header: /var/cvsroot/gentoo-x86/www-apps/tt-rss/tt-rss-1.10.ebuild,v 1.1 2013/09/24 09:07:05 tomka Exp $
 
 EAPI=5
 
